@@ -1,0 +1,63 @@
+<?php
+class Letv implements Extractor
+{
+  public function extractUrl($url)
+  {
+    $html=Helper::getHtml($url);
+    if(preg_match('%http://www.letv.com/ptv/vplay/(\d+).html%',$url,$match))
+    {
+      $vid=$match[1];
+    } else{
+      preg_match('%vid="(\d+)"%',$html,$match);
+      $vid=$match[1];
+    }
+    if(preg_match('%name="irTitle" content="(.*?)"%',$html,$match))
+      $title=$match[1];
+    return $this->extractById($vid,$title);
+  }
+
+  public function extractById($id,$title=null)
+  {
+    $tn=$this->_getTimestamp();
+    $key=$this->_genKey($tn);
+    $url="http://api.letv.com/mms/out/common/geturl?platid=3&splatid=301&playid=0&vtype=9,13,21,28&version=2.0&tss=no&vid={$id}&domain=www.letv.com&tkey={$key}";
+    $obj=json_decode(Helper::getHtml($url),true);
+    $data=$obj['data'][0]['infos'];
+    $size=0;
+    foreach($data as $v)
+    {
+       if($v['gsize']>$size)
+       {
+         $size=$v['gsize'];
+         $url=$v['mainUrl'];
+       }
+    }
+    $tn=rand();
+    $url.="&ctv=pc&m3v=1&termid=1&format=1&hwtype=un&ostype=Linux&tag=letv&sign=letv&expect=3&tn={$tn}&pay=0&iscpn=f9051&rateid=1300";
+    $respon=json_decode(Helper::getHtml($url),true);
+    $url=$respon['location'];
+    $data=array('title'=>$title,'time'=>0, 'size'=>$size, 'url'=>$url);
+    return json_encode($data,true);
+  }
+
+  private function _getTimestamp()
+  {
+    $tn=rand();
+    $url="http://api.letv.com/time?tn={$tn}";
+    $json=json_decode(Helper::getHtml($url),true);
+    return $json['stime'];
+  }
+
+  private function _genKey($t)
+  {
+      for($s=0;$s<8;$s++)
+      {
+         $e=(1 & $t);
+         $t=$t>>1;
+         $e=$e<<31;
+         $t+=$e;
+      }
+      return $t^185025305;
+  }
+
+}

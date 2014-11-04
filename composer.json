@@ -1,0 +1,17 @@
+{
+  "name":"xiao/nutleet",
+  "decription":"nutleet is a video extractor runs on php.",
+  "minimum-stabilithy":"stable",
+  "authors":[
+     {
+    "name":"raychuang",
+    "email":"rayhome1987@gmail.com"
+    }
+  ],
+  "autoload":{
+    "classmap":["src/"]
+  },
+  "require": {
+    "guzzlehttp/guzzle": "3.*"
+  }
+}
